@@ -1,96 +1,113 @@
 let students = JSON.parse(localStorage.getItem("students")) || [];
-
 let editIndex = -1;
-
 displayStudents();
 
-function addStudent(){
+function addStudent() {
 
-let name=document.getElementById("studentName").value.trim();
+    let name = document.getElementById("studentName").value.trim();
+    let roll = document.getElementById("rollNo").value.trim();
+    let english = Number(document.getElementById("english").value);
+    let science = Number(document.getElementById("science").value);
+    let maths = Number(document.getElementById("maths").value);
 
-let roll=document.getElementById("rollNo").value.trim();
+    if (
+        name === "" ||
+        roll === "" ||
+        document.getElementById("english").value === "" ||
+        document.getElementById("science").value === "" ||
+        document.getElementById("maths").value === ""
+    ) {
+        alert("Please fill all fields.");
+        return;
+    }
 
-let english=Number(document.getElementById("english").value);
+    let total = english + science + maths;
 
-let science=Number(document.getElementById("science").value);
+    let percentage = ((total / 300) * 100).toFixed(2);
 
-let maths=Number(document.getElementById("maths").value);
+    let grade = "";
 
-if(name=="" || roll=="" || english=="" || science=="" || maths==""){
+    if (percentage >= 90)
+        grade = "A+";
+    else if (percentage >= 80)
+        grade = "A";
+    else if (percentage >= 70)
+        grade = "B";
+    else if (percentage >= 60)
+        grade = "C";
+    else if (percentage >= 35)
+        grade = "D";
+    else
+        grade = "F";
 
-alert("Please fill all fields");
+    let status =
+        (english >= 35 &&
+         science >= 35 &&
+         maths >= 35)
+        ? "Pass"
+        : "Fail";
 
-return;
+    let student = {
+
+        name,
+        roll,
+        english,
+        science,
+        maths,
+        total,
+        percentage,
+        grade,
+        status
+
+    };
+
+    if (editIndex == -1) {
+
+        students.push(student);
+
+    } else {
+
+        students[editIndex] = student;
+        editIndex = -1;
+
+    }
+
+    localStorage.setItem(
+        "students",
+        JSON.stringify(students)
+    );
+
+    clearForm();
+
+    displayStudents();
 
 }
 
-let total=english+science+maths;
+function displayStudents() {
 
-let percentage=((total/300)*100).toFixed(2);
+    let table = document.getElementById("tableBody");
 
-let grade="";
+    table.innerHTML = "";
 
-if(percentage>=90)
-grade="A+";
-else if(percentage>=80)
-grade="A";
-else if(percentage>=70)
-grade="B";
-else if(percentage>=60)
-grade="C";
-else if(percentage>=50)
-grade="D";
-else
-grade="F";
+    students.forEach((student, index) => {
 
-let status=(english>=35 && science>=35 && maths>=35)?"Pass":"Fail";
+        let gradeClass = "";
 
-let student={
+        if(student.grade=="A+" || student.grade=="A")
+            gradeClass="grade-a";
 
-name,
-roll,
-english,
-science,
-maths,
-total,
-percentage,
-grade,
-status
+        else if(student.grade=="B")
+            gradeClass="grade-b";
 
-};
+        else if(student.grade=="C")
+            gradeClass="grade-c";
 
-if(editIndex==-1){
+        else
+            gradeClass="grade-d";
 
-students.push(student);
+        table.innerHTML += `
 
-}
-else{
-
-students[editIndex]=student;
-
-editIndex=-1;
-
-}
-
-localStorage.setItem("students",JSON.stringify(students));
-
-clearForm();
-
-displayStudents();
-
-}
-
-function displayStudents(){
-
-let table=document.getElementById("tableBody");
-
-table.innerHTML="";
-
-students.forEach(function(student,index){
-
-table.innerHTML+=`
-
-<tr class="${student.status=="Fail"?"fail":""}">
+<tr class="${student.status=="Fail" ? "fail" : ""}">
 
 <td>${student.name}</td>
 
@@ -106,80 +123,92 @@ table.innerHTML+=`
 
 <td>${student.percentage}%</td>
 
-<td>${student.grade}</td>
+<td class="${gradeClass}">
+${student.grade}
+</td>
 
-<td>${student.status}</td>
+<td class="${student.status=="Pass"?"pass":"fail-text"}">
 
-<td>
-
-<button onclick="editStudent(${index})">
-
-Edit
-
-</button>
+${student.status}
 
 </td>
 
 <td>
+<button class="btn btn-warning btn-sm"onclick="editStudent(${index})">Edit</button>
+</td>
 
-<button onclick="deleteStudent(${index})">
-
-Delete
-
-</button>
-
+<td>
+<button class="btn btn-danger btn-sm" onclick="deleteStudent(${index})">Delete</button>
 </td>
 
 </tr>
 
 `;
 
-});
+    });
 
 }
 
 function editStudent(index){
 
-let student=students[index];
+    let student = students[index];
 
-document.getElementById("studentName").value=student.name;
+    document.getElementById("studentName").value = student.name;
+    document.getElementById("rollNo").value = student.roll;
+    document.getElementById("english").value = student.english;
+    document.getElementById("science").value = student.science;
+    document.getElementById("maths").value = student.maths;
 
-document.getElementById("rollNo").value=student.roll;
-
-document.getElementById("english").value=student.english;
-
-document.getElementById("science").value=student.science;
-
-document.getElementById("maths").value=student.maths;
-
-editIndex=index;
+    editIndex = index;
 
 }
+
 
 function deleteStudent(index){
 
-if(confirm("Delete this record?")){
+    if(confirm("Delete this student?")){
 
-students.splice(index,1);
+        students.splice(index,1);
 
-localStorage.setItem("students",JSON.stringify(students));
+        localStorage.setItem(
+            "students",
+            JSON.stringify(students)
+        );
 
-displayStudents();
+        displayStudents();
+
+    }
 
 }
 
-}
+document.getElementById("search").addEventListener("keyup",function(){
+
+    let value = this.value.toLowerCase();
+
+    let rows = document.querySelectorAll("#tableBody tr");
+
+    rows.forEach(row=>{
+
+        let name = row.cells[0].innerText.toLowerCase();
+
+        if(name.includes(value))
+            row.style.display="";
+
+        else
+            row.style.display="none";
+
+    });
+
+});
 
 function clearForm(){
 
-document.getElementById("studentName").value="";
+    document.getElementById("studentName").value="";
+    document.getElementById("rollNo").value="";
+    document.getElementById("english").value="";
+    document.getElementById("science").value="";
+    document.getElementById("maths").value="";
 
-document.getElementById("rollNo").value="";
-
-document.getElementById("english").value="";
-
-document.getElementById("science").value="";
-
-document.getElementById("maths").value="";
+    editIndex=-1;
 
 }
